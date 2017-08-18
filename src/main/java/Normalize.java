@@ -10,6 +10,7 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 public class Normalize {
@@ -22,6 +23,9 @@ public class Normalize {
 
             //movieA:movieB \t relation
             //collect the relationship list for movieA
+            String[] line = value.toString().trim().split("\t");
+            String[] movies = line[0].split(":");
+            context.write(new Text(movies[0]), new Text(movies[1] + ":" + line[1]));
         }
     }
 
@@ -33,6 +37,20 @@ public class Normalize {
 
             //key = movieA, value=<movieB:relation, movieC:relation...>
             //normalize each unit of co-occurrence matrix
+            Iterator<Text> it = values.iterator();
+            HashMap<String, Integer> map = new HashMap<String, Integer>();
+            int sum = 0;
+            while (it.hasNext()) {
+                String[] line = it.next().toString().split(":");
+                int count = Integer.parseInt(line[1]);
+                sum += count;
+                map.put(line[0], count);
+            }
+            for (Map.Entry<String, Integer> entry : map.entrySet()) {
+                String outputKey = entry.getKey();
+                String outputValue = key.toString() + "=" + (double)entry.getValue() / sum;
+                context.write(new Text(outputKey), new Text(outputValue));
+            }
         }
     }
 
