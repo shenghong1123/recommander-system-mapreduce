@@ -13,6 +13,7 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 public class Multiplication {
@@ -22,8 +23,9 @@ public class Multiplication {
 		@Override
 		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 			//input: movieB \t movieA=relation
-
 			//pass data to reducer
+			String[] line = value.toString().trim().split("\t");
+			context.write(new Text(line[0]), new Text(line[1]));
 		}
 	}
 
@@ -34,7 +36,10 @@ public class Multiplication {
 		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 
 			//input: user,movie,rating
+			//output: key = movie, value = user:rating
 			//pass data to reducer
+			String[] line = value.toString().trim().split(";");
+			context.write(new Text(line[1]), new Text(line[0] + ":" + line[2]));
 		}
 	}
 
@@ -46,6 +51,32 @@ public class Multiplication {
 
 			//key = movieB value = <movieA=relation, movieC=relation... userA:rating, userB:rating...>
 			//collect the data for each movie, then do the multiplication
+			HashMap<String, Double> relationMap = new HashMap<String, Double>();
+			HashMap<String, Double> ratingMap = new HashMap<String, Double>();
+			Iterator<Text> it = values.iterator();
+
+			while (it.hasNext()) {
+				String text = it.next().toString();
+				if (text.contains("=")) {
+					String[] line = text.split("=");
+					relationMap.put(line[0], Double.parseDouble(line[1]));
+				} else {
+					String[] line = text.split(":");
+					ratingMap.put(line[0], Double.parseDouble(line[1]));
+				}
+			}
+
+			for (Map.Entry<String, Double> entry : relationMap.entrySet()) {
+				String movie = entry.getKey();
+				double relation = entry.getValue();
+
+				for (Map.Entry<String, Double> element : ratingMap.entrySet()) {
+					String user = element.getKey();
+					double rating = element.getValue();
+					context.write(new Text(user + ":" + movie), new DoubleWritable(relation * rating));
+				}
+			}
+
 		}
 	}
 
