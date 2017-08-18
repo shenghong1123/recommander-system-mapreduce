@@ -38,7 +38,7 @@ public class Multiplication {
 			//input: user,movie,rating
 			//output: key = movie, value = user:rating
 			//pass data to reducer
-			String[] line = value.toString().trim().split(";");
+			String[] line = value.toString().trim().split(",");
 			context.write(new Text(line[1]), new Text(line[0] + ":" + line[2]));
 		}
 	}
