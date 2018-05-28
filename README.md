@@ -2,17 +2,35 @@
 Use collaborative filtering algorithms to predict rating matrix
 
 ```
-cd src # 进入src 目录
+install Docker
 
-wget https://s3-us-west-2.amazonaws.com/jiuzhang-bigdata/RecommenderSystem.tar # 下载代码
+mkdir bigdata-class
 
-tar -xvf  RecommenderSystem.tar # 解压缩
+cd bigdata-class #create a working directory on localhost
 
-cd RecommenderSystem # 进入解压出的目录
+sudo docker pull joway/hadoop-cluster #download cluster image from docker hub
+
+git clone https://github.com/joway/hadoop-cluster-docker #download code from github
+
+sudo docker network create --driver=bridge hadoop #build a bride for communication between hadoop nodes
+
+cd hadoop-cluster-docker
+
+sudo ./start-container.sh #enter the docker container
+
+./start-hadoop.sh #start hadoop
+
+cd src #Enter src directory
+
+wget https://s3-us-west-2.amazonaws.com/jiuzhang-bigdata/RecommenderSystem.tar #download the code
+
+tar -xvf  RecommenderSystem.tar #uncompress
+
+cd RecommenderSystem #enter uncompressed directory
 
 hdfs dfs -mkdir /input
 
-hdfs dfs -put input/* /input  # 把user 相关的rating 文件上传
+hdfs dfs -put input/* /input  #upload user's rating data to HDFS
 
 hdfs dfs -rm -r /dataDividedByUser
 
@@ -46,5 +64,5 @@ hdfs dfs -cat /Sum/*
 
 #args5: output directory for Sum job
 
-hdfs dfs -ls / #如果结果正确你可以看到下面这些文件里面有相应的结果输出
+hdfs dfs -ls / #you should see the result if everything is correct
 ```
